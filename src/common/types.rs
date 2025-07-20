@@ -10,7 +10,7 @@ impl Pixel {
     }
 }
 
-type Color = Pixel;
+pub type Color = Pixel;
 
 pub struct Position {
     x: usize,
