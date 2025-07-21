@@ -1,3 +1,4 @@
+#[derive(Clone, Debug, PartialEq)]
 pub struct Pixel {
     r: u8,
     g: u8,
@@ -12,9 +13,10 @@ impl Pixel {
 
 pub type Color = Pixel;
 
+#[derive(Debug)]
 pub struct Position {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Position {
