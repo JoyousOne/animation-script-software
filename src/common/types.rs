@@ -13,6 +13,12 @@ impl Pixel {
 
 pub type Color = Pixel;
 
+impl Color {
+    pub const fn as_bytes(&self) -> [u8; 3] {
+        [self.r, self.g, self.b]
+    }
+}
+
 #[derive(Debug)]
 pub struct Position {
     pub x: usize,
