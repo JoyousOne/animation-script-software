@@ -3,15 +3,17 @@ use std::{cell::RefCell, rc::Rc};
 use crate::common::types::{Color, Pixel, Position};
 
 /** Graphical Control Extension **/
+const EXTENSIONS_INTRODUCER: u8 = 0x21;
+const GRAPHIC_CONTROL_LABEL: u8 = 0xF9;
 
 /** Image Descriptor **/
 const IMAGE_DESCRIPTOR_SIZE: usize = 10;
-const IMAGE_SEPARATOR: u8 = b'\x21';
+const IMAGE_SEPARATOR: u8 = b'\x2C';
 
 /** Image Data **/
 const SUB_BLOCK_MAX_SIZE: usize = 255;
 
-struct Image {
+pub struct Image {
     color_table: Rc<RefCell<Vec<Pixel>>>,
     pixel_indexes: Vec<u8>,
     left: u16,
@@ -29,12 +31,8 @@ impl Image {
             None => Rc::new(RefCell::new(Vec::new())),
         };
 
-        // let mut pixel_indexes = Vec::with_capacity((height * width) as usize);
-        // pixel_indexes.fill(value);
-
         Image {
             color_table: color_table,
-            // pixel_indexes: Vec::with_capacity((height * width) as usize),
             pixel_indexes: vec![0u8; (height * width) as usize],
             left: 0,
             top: 0,
@@ -108,9 +106,13 @@ impl Image {
     }
 
     /** Converting the image to bytes **/
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let img_descriptor = self.get_image_descriptor();
+        let img_data = self.get_image_data();
 
-    pub fn to_bytes(&self) -> Vec<u8> {
-        let bytes = Vec::new();
+        let mut bytes = Vec::with_capacity(img_descriptor.len() + img_data.len());
+        bytes.extend_from_slice(&img_descriptor);
+        bytes.extend_from_slice(&img_data);
 
         bytes
     }
@@ -139,7 +141,7 @@ impl Image {
 
         let (lzw_min_code_size, encoded) = encode_to_lzw(&self.pixel_indexes, num_colors);
 
-        let mut size_of_encoded = encoded.len();
+        let size_of_encoded = encoded.len();
         let num_sub_block = size_of_encoded / SUB_BLOCK_MAX_SIZE;
         let num_byte_last_block = size_of_encoded % SUB_BLOCK_MAX_SIZE;
 
@@ -175,21 +177,7 @@ impl Image {
         // Pushing the block terminator
         img_data.push(0);
 
-        // println!("Image data: {:b?}", img_data);
-        println!("encoded: ");
-        for byte in encoded {
-            print!("{:X} ", byte);
-        }
-
-        println!("\nimg_data: ");
-        for byte in &img_data {
-            print!("{:X} ", byte);
-        }
-        println!();
-
         return img_data;
-        // vec![]
-        // lzw_min_code_size =
     }
 }
 
