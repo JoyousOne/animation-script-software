@@ -128,7 +128,7 @@ impl Image {
     }
 
     // Graphic Control Extension
-    fn get_gce(&self) -> Vec<u8> {
+    pub fn get_gce(&self) -> Vec<u8> {
         let mut bytes = vec![0u8; GRAPHICAL_CONTROL_EXTENSION_SIZE];
 
         bytes[0] = EXTENSIONS_INTRODUCER;
@@ -150,7 +150,7 @@ impl Image {
         bytes
     }
 
-    fn get_image_descriptor(&self) -> Vec<u8> {
+    pub fn get_image_descriptor(&self) -> Vec<u8> {
         let mut img_desc = Vec::with_capacity(IMAGE_DESCRIPTOR_SIZE);
 
         img_desc.push(IMAGE_SEPARATOR);
@@ -165,7 +165,7 @@ impl Image {
         img_desc
     }
 
-    fn get_image_data(&self) -> Vec<u8> {
+    pub fn get_image_data(&self) -> Vec<u8> {
         let num_colors = self.color_table.borrow().len();
 
         let (lzw_min_code_size, encoded) = encode_to_lzw(&self.pixel_indexes, num_colors);
@@ -296,8 +296,9 @@ fn encode_to_lzw(input: &[u8], num_unique_code: usize) -> (u8, Vec<u8>) {
                 // surpasses the number of bits needed to write their index
                 if (1 << curr_code_size) < table.len() {
                     curr_code_size += 1;
-                } else if table.len() == CODE_TABLE_MAX_SIZE {
+                } else if table.len() == CODE_TABLE_MAX_SIZE - 1 {
                     // Resetting the table when reaching max size
+                    encoded.write_code(cc, curr_code_size);
                     table.truncate(eoi + 1); // Since eoi is the last index of the table
                     curr_code_size = lzw_min_code_size + 1;
                 }
