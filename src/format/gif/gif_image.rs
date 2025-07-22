@@ -3,8 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use crate::common::types::{Color, Pixel, Position};
 
 /** Graphical Control Extension **/
+const GRAPHICAL_CONTROL_EXTENSION_SIZE: usize = 8;
 const EXTENSIONS_INTRODUCER: u8 = 0x21;
 const GRAPHIC_CONTROL_LABEL: u8 = 0xF9;
+const GCE_BYTE_SIZE: u8 = 0x04;
 
 /** Image Descriptor **/
 const IMAGE_DESCRIPTOR_SIZE: usize = 10;
@@ -25,7 +27,7 @@ pub struct Image {
 
 impl Image {
     pub fn new(height: u16, width: u16, color_table: Option<Rc<RefCell<Vec<Pixel>>>>) -> Self {
-        // TODO if no colorTactle crctw
+        // TODO if no colorTable create local one
         let color_table = match color_table {
             Some(ct) => ct,
             None => Rc::new(RefCell::new(Vec::new())),
@@ -60,13 +62,13 @@ impl Image {
         self
     }
 
-    fn get_color_index(&mut self, color: Color) -> usize {
+    fn get_color_index(&mut self, color: &Color) -> usize {
         let mut color_table = self.color_table.borrow_mut();
 
-        let index = match &color_table.iter().position(|c| *c == color) {
+        let index = match &color_table.iter().position(|c| c == color) {
             Some(index) => *index,
             None => {
-                color_table.push(color);
+                color_table.push(color.clone());
                 color_table.len() - 1
             }
         };
@@ -74,7 +76,7 @@ impl Image {
         index
     }
 
-    pub fn draw_rectangle(&mut self, start: Position, end: Position, color: Color) -> &mut Image {
+    pub fn draw_rectangle(&mut self, start: Position, end: Position, color: &Color) -> &mut Image {
         let color_index = self.get_color_index(color);
 
         for y in start.y..end.y {
@@ -86,7 +88,7 @@ impl Image {
         self
     }
 
-    pub fn fill(&mut self, color: Color) -> &mut Image {
+    pub fn fill(&mut self, color: &Color) -> &mut Image {
         let color_index = self.get_color_index(color);
 
         self.pixel_indexes.fill(color_index as u8);
@@ -110,7 +112,14 @@ impl Image {
         let img_descriptor = self.get_image_descriptor();
         let img_data = self.get_image_data();
 
-        let mut bytes = Vec::with_capacity(img_descriptor.len() + img_data.len());
+        let mut bytes = Vec::with_capacity(
+            GRAPHICAL_CONTROL_EXTENSION_SIZE + IMAGE_DESCRIPTOR_SIZE + img_data.len(),
+        );
+
+        if self.delay != 0 {
+            bytes.extend_from_slice(&self.get_gce());
+        }
+
         bytes.extend_from_slice(&img_descriptor);
         bytes.extend_from_slice(&img_data);
 
@@ -118,8 +127,27 @@ impl Image {
     }
 
     // Graphic Control Extension
-    // const
-    // fn get_gce() -> Vec<u8> {}
+    fn get_gce(&self) -> Vec<u8> {
+        let mut bytes = vec![0u8; GRAPHICAL_CONTROL_EXTENSION_SIZE];
+
+        bytes[0] = EXTENSIONS_INTRODUCER;
+        bytes[1] = GRAPHIC_CONTROL_LABEL;
+        bytes[2] = GCE_BYTE_SIZE;
+
+        // TODO implement
+        bytes[3] = 0; // Packed field
+
+        // adding delay bytes
+        let delay_bytes = self.delay.to_le_bytes();
+        bytes[4] = delay_bytes[0];
+        bytes[5] = delay_bytes[1];
+
+        // NOTE remaining bytes not important for now
+
+        // println!("GCE: {:02X?}", bytes);
+
+        bytes
+    }
 
     fn get_image_descriptor(&self) -> Vec<u8> {
         let mut img_desc = Vec::with_capacity(IMAGE_DESCRIPTOR_SIZE);
@@ -157,8 +185,6 @@ impl Image {
         // block terminator (1 byte)
         let mut img_data = Vec::with_capacity(2 + total_num_sub_block + size_of_encoded);
         img_data.push(lzw_min_code_size);
-        // let mut img_data = vec![0u8; 2 + total_num_sub_block + size_of_encoded];
-        // img_data[0] = lzw_min_code_size;
 
         // Adding full blocks
         for i in 0..num_sub_block {
@@ -311,10 +337,10 @@ mod tests {
         ]));
 
         let mut img = Image::new(10, 10, Some(Rc::clone(&color_table)));
-        img.fill(red)
-            .draw_rectangle(Position::new(5, 0), Position::new(10, 5), blue.clone())
-            .draw_rectangle(Position::new(0, 5), Position::new(5, 10), blue.clone())
-            .draw_rectangle(Position::new(3, 3), Position::new(7, 7), white.clone());
+        img.fill(&red)
+            .draw_rectangle(Position::new(5, 0), Position::new(10, 5), &blue)
+            .draw_rectangle(Position::new(0, 5), Position::new(5, 10), &blue)
+            .draw_rectangle(Position::new(3, 3), Position::new(7, 7), &white);
 
         img.print_pixel_indexes();
 
