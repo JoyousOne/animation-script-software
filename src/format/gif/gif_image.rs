@@ -14,6 +14,7 @@ const IMAGE_SEPARATOR: u8 = b'\x2C';
 
 /** Image Data **/
 const SUB_BLOCK_MAX_SIZE: usize = 255;
+const CODE_TABLE_MAX_SIZE: usize = 4096;
 
 pub struct Image {
     color_table: Rc<RefCell<Vec<Pixel>>>,
@@ -245,7 +246,8 @@ impl BitCoder {
 /// Encode input to lzw and variable length code
 fn encode_to_lzw(input: &[u8], num_unique_code: usize) -> (u8, Vec<u8>) {
     // Initializing code table
-    let mut table: Vec<Vec<usize>> = Vec::new();
+    // let mut table: Vec<Vec<usize>> = Vec::new();
+    let mut table: Vec<Vec<usize>> = Vec::with_capacity(CODE_TABLE_MAX_SIZE);
     for i in 0..num_unique_code {
         table.push(vec![i]);
     }
@@ -294,6 +296,10 @@ fn encode_to_lzw(input: &[u8], num_unique_code: usize) -> (u8, Vec<u8>) {
                 // surpasses the number of bits needed to write their index
                 if (1 << curr_code_size) < table.len() {
                     curr_code_size += 1;
+                } else if table.len() == CODE_TABLE_MAX_SIZE {
+                    // Resetting the table when reaching max size
+                    table.truncate(eoi + 1); // Since eoi is the last index of the table
+                    curr_code_size = lzw_min_code_size + 1;
                 }
 
                 // Set index buffer to k
