@@ -36,7 +36,7 @@ impl Image {
 
         Image {
             color_table: color_table,
-            pixel_indexes: vec![0u8; (height * width) as usize],
+            pixel_indexes: vec![0u8; height as usize * width as usize],
             left: 0,
             top: 0,
             height,
