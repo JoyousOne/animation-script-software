@@ -1,5 +1,6 @@
 use crate::common::types::{Color, Pixel};
 use crate::format::gif::gif_image::Image;
+use std::cmp::max;
 use std::{cell::RefCell, cmp::min, fs::File, io::Write, rc::Rc};
 
 pub const SIGNATURE: [u8; 3] = *b"GIF";
@@ -46,7 +47,8 @@ impl Gif {
         let color_count = self.global_color_table.borrow().len();
         let bit_size = ((color_count as f64).log2().ceil() - 1.0) as u8;
 
-        min(bit_size, 0x07)
+        // Minimum of one because some modern viewer does't support global color table of length 2
+        max(1, min(bit_size, 0x07))
     }
 
     // TODO for now only global table
@@ -109,11 +111,9 @@ impl Gif {
         // add padding to the color table
         {
             let mut global_color_table = self.global_color_table.borrow_mut();
-            println!("global_color_bits: {}", global_color_bits);
 
             // Filling global color table with padding
             let padding_size = (1 << (global_color_bits + 1)) - global_color_table.len();
-            println!("padding_size: {}", padding_size);
             for _ in 0..padding_size {
                 global_color_table.push(Color::new(0, 0, 0));
             }
@@ -285,10 +285,10 @@ mod tests {
         let black = Pixel::new(0, 0, 255);
 
         gif.add_image().fill(&white);
-        assert_eq!(gif.get_global_color_table_size_bits(), 0);
+        assert_eq!(gif.get_global_color_table_size_bits(), 1);
 
         gif.add_image().fill(&red);
-        assert_eq!(gif.get_global_color_table_size_bits(), 0);
+        assert_eq!(gif.get_global_color_table_size_bits(), 1);
 
         gif.add_image().fill(&blue);
         assert_eq!(gif.get_global_color_table_size_bits(), 1);
