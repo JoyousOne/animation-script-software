@@ -1,5 +1,5 @@
 use crate::common::types::{Color, Pixel};
-use crate::format::gif::gif_image::Image;
+use crate::format::gif::gif_image::GifImage;
 use std::cmp::max;
 use std::{cell::RefCell, cmp::min, fs::File, io::Write, rc::Rc};
 
@@ -29,7 +29,7 @@ pub struct Gif {
     width: u16,
     global_color_table: Rc<RefCell<Vec<Color>>>,
     num_loop: Option<Loop>,
-    images: Vec<Image>, // TODO add image type
+    images: Vec<GifImage>, // TODO add image type
 }
 
 impl Gif {
@@ -51,9 +51,9 @@ impl Gif {
         max(1, min(bit_size, 0x07))
     }
 
-    // TODO for now only global table
-    pub fn add_image(&mut self) -> &mut Image {
-        let new_image = Image::new(
+    // NOTE for now only global table
+    pub fn add_image(&mut self) -> &mut GifImage {
+        let new_image = GifImage::new(
             self.height,
             self.width,
             Some(Rc::clone(&self.global_color_table)),
@@ -124,8 +124,6 @@ impl Gif {
             }
         }
 
-        println!("color: {:?}", self.global_color_table);
-
         // Adding application extension if present
         file_contents.extend_from_slice(&self.get_application_extension_block());
 
@@ -137,8 +135,6 @@ impl Gif {
         // add gif end
         file_contents.push(TRAILER_MARKER);
 
-        // DEBUG
-        // println!("file_contents: {:02X?}", file_contents);
 
         // write to file
         let mut file = File::create(filename)?;
@@ -272,7 +268,7 @@ impl Gif {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::types::Pixel;
+    use crate::{common::types::Pixel, format::image::ImageFormat};
 
     use super::*;
     #[test]

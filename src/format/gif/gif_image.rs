@@ -1,6 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::common::types::{Color, Pixel, Position};
+use crate::{
+    common::types::{Color, Pixel, Position},
+    format::image::{Image, ImageFormat},
+};
 
 /** Graphical Control Extension **/
 const GRAPHICAL_CONTROL_EXTENSION_SIZE: usize = 8;
@@ -16,9 +19,10 @@ const IMAGE_SEPARATOR: u8 = b'\x2C';
 const SUB_BLOCK_MAX_SIZE: usize = 255;
 const CODE_TABLE_MAX_SIZE: usize = 4096;
 
-pub struct Image {
+pub struct GifImage {
     color_table: Rc<RefCell<Vec<Pixel>>>,
-    pixel_indexes: Vec<u8>,
+    /// Image of u8 which represents the indexes of the colors
+    image: Image<u8>,
     left: u16,
     top: u16,
     height: u16,
@@ -26,7 +30,31 @@ pub struct Image {
     delay: u16,
 }
 
-impl Image {
+impl ImageFormat<Color> for GifImage {
+    fn fill(&mut self, color: &Color) -> &mut Self {
+        let color_index = self.get_color_index(color) as u8;
+
+        self.image.fill(color_index);
+
+        self
+    }
+
+    fn draw_rectangle(
+        &mut self,
+        top_left: Position,
+        bottom_right: Position,
+        color: &Color,
+    ) -> &mut Self {
+        let color_index = self.get_color_index(color) as u8;
+
+        self.image
+            .draw_rectangle(top_left, bottom_right, color_index);
+
+        self
+    }
+}
+
+impl GifImage {
     pub fn new(height: u16, width: u16, color_table: Option<Rc<RefCell<Vec<Pixel>>>>) -> Self {
         // TODO if no colorTable create local one
         let color_table = match color_table {
@@ -34,9 +62,10 @@ impl Image {
             None => Rc::new(RefCell::new(Vec::new())),
         };
 
-        Image {
+        GifImage {
             color_table: color_table,
-            pixel_indexes: vec![0u8; height as usize * width as usize],
+            // pixel_indexes: vec![0u8; height as usize * width as usize],
+            image: Image::new(height as usize, width as usize, 0),
             left: 0,
             top: 0,
             height,
@@ -46,19 +75,19 @@ impl Image {
     }
 
     /// add left beginning of image
-    pub fn add_left(&mut self, position: u16) -> &mut Image {
+    pub fn add_left(&mut self, position: u16) -> &mut GifImage {
         self.left = position;
         self
     }
 
     /// add top beginning of image
-    pub fn add_top(&mut self, position: u16) -> &mut Image {
+    pub fn add_top(&mut self, position: u16) -> &mut GifImage {
         self.top = position;
         self
     }
 
     /// add delay in centiseconds. Ex: delay = 10 = 0.1s
-    pub fn add_delay(&mut self, delay: u16) -> &mut Image {
+    pub fn add_delay(&mut self, delay: u16) -> &mut GifImage {
         self.delay = delay;
         self
     }
@@ -75,37 +104,6 @@ impl Image {
         };
 
         index
-    }
-
-    pub fn draw_rectangle(&mut self, start: Position, end: Position, color: &Color) -> &mut Image {
-        let color_index = self.get_color_index(color);
-
-        for y in start.y..end.y {
-            for x in start.x..end.x {
-                self.pixel_indexes[(y * self.width as usize) + x] = color_index as u8;
-            }
-        }
-
-        self
-    }
-
-    pub fn fill(&mut self, color: &Color) -> &mut Image {
-        let color_index = self.get_color_index(color);
-
-        self.pixel_indexes.fill(color_index as u8);
-
-        self
-    }
-
-    // DEBUG function
-    pub fn print_pixel_indexes(&self) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                print!("{} ", self.pixel_indexes[((y * self.width) + x) as usize]);
-            }
-            println!();
-        }
-        println!();
     }
 
     /** Converting the image to bytes **/
@@ -166,9 +164,7 @@ impl Image {
     }
 
     pub fn get_image_data(&self) -> Vec<u8> {
-        let num_colors = self.color_table.borrow().len();
-
-        let (lzw_min_code_size, encoded) = encode_to_lzw(&self.pixel_indexes, num_colors);
+        let (lzw_min_code_size, encoded) = self.encode_to_lzw();
 
         let size_of_encoded = encoded.len();
         let num_sub_block = size_of_encoded / SUB_BLOCK_MAX_SIZE;
@@ -205,6 +201,90 @@ impl Image {
         img_data.push(0);
 
         return img_data;
+    }
+
+    /// Encode input to lzw and variable length code
+    // fn encode_to_lzw(input: &[u8], num_unique_code: usize) -> (u8, Vec<u8>) {
+    fn encode_to_lzw(&self) -> (u8, Vec<u8>) {
+        let num_unique_code = self.color_table.borrow().len();
+        // Initializing code table
+        let mut table: Vec<Vec<usize>> = Vec::with_capacity(CODE_TABLE_MAX_SIZE);
+        for i in 0..num_unique_code {
+            table.push(vec![i]);
+        }
+
+        // Adding CC (clear code) and EOI (End of Information) to the table
+        let (cc, eoi) = (num_unique_code, num_unique_code + 1);
+        table.push(vec![cc]); // Adding Clear Code
+        table.push(vec![eoi]); // Adding End Of Information
+
+        let mut lzw_min_code_size = 0u8;
+        while 1 << (lzw_min_code_size + 1) < table.len() {
+            lzw_min_code_size += 1;
+        }
+
+        let mut curr_code_size = lzw_min_code_size + 1;
+
+        let mut encoded = BitCoder::new();
+        encoded.write_code(cc, curr_code_size);
+
+        let mut pixel_indexes = self.image.pixels_indexes.clone();
+
+        // Taking first value for index_buffer
+        let first = &mut pixel_indexes[0];
+        let mut index_buffer = vec![first.value as usize];
+        first.freq -= 1;
+
+        // for rle in &self.image.pixels_indexes {
+        for rle in pixel_indexes {
+            for _ in 0..rle.freq {
+                let k = rle.value as usize;
+
+                let mut index_buffer_plus_k = index_buffer.clone();
+                index_buffer_plus_k.push(k);
+
+                let index = table.iter().position(|code| *code == index_buffer_plus_k);
+
+                match index {
+                    Some(_index) => {
+                        index_buffer.push(k);
+                    }
+                    None => {
+                        table.push(index_buffer_plus_k.clone());
+
+                        // Writing current code to buffer
+                        let code = table.iter().position(|code| *code == index_buffer).unwrap();
+
+                        encoded.write_code(code, curr_code_size);
+
+                        // Update the code size when the number of element in array
+                        // surpasses the number of bits needed to write their index
+                        if (1 << curr_code_size) < table.len() {
+                            curr_code_size += 1;
+                        } else if table.len() == CODE_TABLE_MAX_SIZE - 1 {
+                            // Resetting the table when reaching max size
+                            encoded.write_code(cc, curr_code_size);
+                            table.truncate(eoi + 1); // Since eoi is the last index of the table
+                            curr_code_size = lzw_min_code_size + 1;
+                        }
+
+                        // Set index buffer to k
+                        index_buffer = vec![k];
+                    }
+                }
+            }
+        }
+        // Adding last index value
+        let last_index_value = table.iter().position(|code| *code == index_buffer).unwrap();
+        encoded.write_code(last_index_value, curr_code_size);
+
+        // Adding End of information code
+        encoded.write_code(eoi, curr_code_size);
+
+        // Writing the last byte in the bit coder
+        encoded.flush();
+
+        (lzw_min_code_size, encoded.buffer)
     }
 }
 
@@ -243,87 +323,6 @@ impl BitCoder {
     }
 }
 
-/// Encode input to lzw and variable length code
-fn encode_to_lzw(input: &[u8], num_unique_code: usize) -> (u8, Vec<u8>) {
-    // Initializing code table
-    // let mut table: Vec<Vec<usize>> = Vec::new();
-    let mut table: Vec<Vec<usize>> = Vec::with_capacity(CODE_TABLE_MAX_SIZE);
-    for i in 0..num_unique_code {
-        table.push(vec![i]);
-    }
-
-    // Adding CC (clear code) and EOI (End of Information) to the table
-    let (cc, eoi) = (num_unique_code, num_unique_code + 1);
-    table.push(vec![cc]); // Adding Clear Code
-    table.push(vec![eoi]); // Adding End Of Information
-
-    let mut lzw_min_code_size = 0u8;
-    while 1 << (lzw_min_code_size + 1) < table.len() {
-        lzw_min_code_size += 1;
-    }
-
-    let mut curr_code_size = lzw_min_code_size + 1;
-
-    let mut encoded = BitCoder::new();
-    encoded.write_code(cc, curr_code_size);
-
-    let mut current_stream_index = 0;
-    let mut index_buffer = vec![input[current_stream_index] as usize];
-
-    // FIXME TODO T ICI
-    // AJOUTER LES BLOCKS SIZE ICI
-    while current_stream_index + 1 < input.len() {
-        let k = input[current_stream_index + 1] as usize;
-
-        let mut index_buffer_plus_k = index_buffer.clone();
-        index_buffer_plus_k.push(k);
-
-        let index = table.iter().position(|code| *code == index_buffer_plus_k);
-
-        match index {
-            Some(_index) => {
-                index_buffer.push(k);
-            }
-            None => {
-                table.push(index_buffer_plus_k.clone());
-
-                // Writing current code to buffer
-                let code = table.iter().position(|code| *code == index_buffer).unwrap();
-
-                encoded.write_code(code, curr_code_size);
-
-                // Update the code size when the number of element in array
-                // surpasses the number of bits needed to write their index
-                if (1 << curr_code_size) < table.len() {
-                    curr_code_size += 1;
-                } else if table.len() == CODE_TABLE_MAX_SIZE - 1 {
-                    // Resetting the table when reaching max size
-                    encoded.write_code(cc, curr_code_size);
-                    table.truncate(eoi + 1); // Since eoi is the last index of the table
-                    curr_code_size = lzw_min_code_size + 1;
-                }
-
-                // Set index buffer to k
-                index_buffer = vec![k];
-            }
-        }
-
-        current_stream_index += 1;
-    }
-
-    // Adding last index value
-    let last_index_value = table.iter().position(|code| *code == index_buffer).unwrap();
-    encoded.write_code(last_index_value, curr_code_size);
-
-    // Adding End of information code
-    encoded.write_code(eoi, curr_code_size);
-
-    // Writing the last byte in the bit coder
-    encoded.flush();
-
-    (lzw_min_code_size, encoded.buffer)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -343,15 +342,16 @@ mod tests {
             black.clone(),
         ]));
 
-        let mut img = Image::new(10, 10, Some(Rc::clone(&color_table)));
+        let mut img = GifImage::new(10, 10, Some(Rc::clone(&color_table)));
         img.fill(&red)
-            .draw_rectangle(Position::new(5, 0), Position::new(10, 5), &blue)
-            .draw_rectangle(Position::new(0, 5), Position::new(5, 10), &blue)
-            .draw_rectangle(Position::new(3, 3), Position::new(7, 7), &white);
+            .draw_rectangle(Position::new(5, 0), Position::new(9, 4), &blue)
+            .draw_rectangle(Position::new(0, 5), Position::new(4, 9), &blue)
+            .draw_rectangle(Position::new(3, 3), Position::new(6, 6), &white);
 
-        img.print_pixel_indexes();
+        // DEBUG
+        // img.image.print_content();
 
-        println!("color_table: {:?}", color_table);
+        // println!("color_table: {:?}", color_table);
         let result = img.get_image_data();
         let expected = vec![
             b'\x02', // lzw_min_code_size

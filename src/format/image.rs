@@ -14,10 +14,23 @@ impl<T> RLE<T> {
     }
 }
 
+pub trait ImageFormat<T> {
+    /// Fill the image with a given color
+    fn fill(&mut self, color: &T) -> &mut Self;
+
+    /// Draw a rectangle from a position that start from the top left and that goes to a position bottom right with a given color.
+    fn draw_rectangle(
+        &mut self,
+        top_left: Position,
+        bottom_right: Position,
+        color: &T,
+    ) -> &mut Self;
+}
+
 pub struct Image<T> {
     height: usize,
     width: usize,
-    pixels_indexes: Vec<RLE<T>>,
+    pub pixels_indexes: Vec<RLE<T>>,
 }
 
 impl<T> Image<T>
@@ -28,7 +41,7 @@ where
         Image {
             height,
             width,
-            pixels_indexes: vec![RLE::new((width * height) as usize, default_color)],
+            pixels_indexes: vec![RLE::new((width * height) as usize, default_color.clone())],
         }
     }
 
@@ -98,7 +111,7 @@ where
         self
     }
 
-    fn print_content(&self) {
+    pub fn print_content(&self) {
         let mut i = 1;
         for RLE { freq, value } in &self.pixels_indexes {
             for _ in 1..*freq + 1 {
