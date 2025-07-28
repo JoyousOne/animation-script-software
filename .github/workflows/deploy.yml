@@ -1,30 +1,31 @@
 name: Deploy mdBook to GitHub Pages
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:  # allows manual triggering from GitHub UI
+    branches: [main]
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v2
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
-          mdbook-version: '0.4.21'
-          # mdbook-version: 'latest'
+          mdbook-version: 'latest'
 
-      - run: mdbook build
+      - run: cd project-book && mdbook build
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc
+          publish_dir: ./project-book/book
