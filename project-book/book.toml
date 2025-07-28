@@ -1,0 +1,5 @@
+[book]
+authors = ["Robillard, Albert"]
+language = "en"
+src = "src"
+title = "Animation Script"
