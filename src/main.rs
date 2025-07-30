@@ -6,10 +6,20 @@ use crate::{
     },
 };
 
+use animator::{
+    objects::shapes::rectangle::Rectangle,
+    scene::Scene,
+    transition::{Transition, TransitionDescriptor},
+    types::{Color, Direction, EasingFunction::Linear, Length, Point, Rotation},
+};
+
+mod animator;
 mod common;
 mod format;
 
 fn main() {
+    // example_animator();
+
     let (height, width) = (10u16, 10u16);
     let mut gif = Gif::new(height, width, Some(Loop::Forever));
 
@@ -148,4 +158,47 @@ fn example3(gif: &mut Gif, height: usize, width: usize) {
         ),
         &WHITE,
     );
+}
+
+fn example_animator() {
+    let rect = Rectangle {
+        p1: Point { x: 3.0, y: 4.0 },
+        p2: Point { x: 7.0, y: 8.0 },
+        rotation: Rotation::Turn(0.0),
+        z_index: 0,
+        fill_color: Color::RGBA(255, 0, 0, 255),
+        border_color: Color::RGBA(255, 255, 255, 255),
+        border_size: Length::Pixel(0),
+        outline_color: Color::RGBA(255, 255, 255, 255),
+        outline_size: Length::Pixel(0),
+        transitions: vec![Transition::Move(TransitionDescriptor {
+            end_value: Point { x: 6.0, y: 7.0 },
+            start_frame: 60,
+            end_frame: 359,
+            play_count: 1,
+            easing_function: Linear,
+            direction: Direction::Normal,
+        })],
+    };
+
+    let mut scene = Scene::new(20, 20, 360);
+
+    scene.add_object(rect);
+
+    let frames = scene.render();
+
+    let frames = vec![frames[0].clone(), frames[200].clone(), frames[359].clone()];
+
+    for frame in frames {
+        for row in frame.buffer {
+            for c in row {
+                match c {
+                    Color::RGBA(0, 0, 0, 0) => print!("."),
+                    _ => print!("X"),
+                }
+            }
+            println!("");
+        }
+        println!("\n");
+    }
 }
