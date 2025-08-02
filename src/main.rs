@@ -171,7 +171,7 @@ fn example_animator() {
         border_size: Length::Pixel(0),
         outline_color: Color::RGBA(255, 255, 255, 255),
         outline_size: Length::Pixel(0),
-        transitions: vec![Transition::Move(TransitionDescriptor {
+        transitions: vec![Transition::Translate(TransitionDescriptor {
             end_value: Point { x: 6.0, y: 7.0 },
             start_frame: 60,
             end_frame: 359,

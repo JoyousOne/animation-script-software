@@ -30,21 +30,23 @@ impl Rectangle {
 
     pub fn apply_transition(&mut self, transition: &Transition, frame_count: u32) {
         match transition {
-            Transition::Move(descriptor) => Transition::apply_move(self, descriptor, frame_count),
+            Transition::Translate(descriptor) => {
+                self.apply_translate_transition(descriptor, frame_count)
+            }
             Transition::ScaleTop(descriptor) => {
-                Transition::apply_scale_top(self, descriptor, frame_count);
+                self.apply_scale_top_transition(descriptor, frame_count);
             }
             Transition::ScaleBottom(descriptor) => {
-                Transition::apply_scale_bottom(self, descriptor, frame_count);
+                self.apply_scale_bottom_transition(descriptor, frame_count);
             }
             Transition::ScaleLeft(descriptor) => {
-                Transition::apply_scale_left(self, descriptor, frame_count);
+                self.apply_scale_left_transition(descriptor, frame_count);
             }
             Transition::ScaleRight(descriptor) => {
-                Transition::apply_scale_right(self, descriptor, frame_count);
+                self.apply_scale_right_transition(descriptor, frame_count);
             }
             Transition::Rotate(descriptor) => {
-                Transition::apply_rotate(self, descriptor, frame_count);
+                self.apply_rotate_transition(descriptor, frame_count);
             }
         }
     }

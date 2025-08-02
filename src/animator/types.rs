@@ -162,17 +162,17 @@ pub enum Direction {
     AlternateReverse,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Time {
-    Frames(u32),
-    Seconds(f64),
-}
-
-impl Time {
-    fn as_frame_count(&self, fps: u32) -> u32 {
-        match self {
-            Self::Frames(count) => *count,
-            Self::Seconds(count) => (*count * f64::from(fps)) as u32,
-        }
-    }
-}
+// #[derive(Debug, Clone, Copy)]
+// pub enum Time {
+//     Frames(u32),
+//     Seconds(f64),
+// }
+//
+// impl Time {
+//     fn as_frame_count(&self, fps: u32) -> u32 {
+//         match self {
+//             Self::Frames(count) => *count,
+//             Self::Seconds(count) => (*count * f64::from(fps)) as u32,
+//         }
+//     }
+// }
