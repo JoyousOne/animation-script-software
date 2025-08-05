@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul, Sub};
+
 use super::types::{CoordinateValue, Direction, EasingFunction, Point, Rotation};
 
 #[derive(Clone, Copy)]
@@ -11,13 +13,32 @@ pub enum Transition {
 }
 
 #[derive(Clone, Copy)]
-pub struct TransitionDescriptor<T> {
+pub struct TransitionDescriptor<T>
+where
+    T: Add<Output = T> + Sub<Output = T> + Mul<f64, Output = T> + Clone,
+{
     pub end_value: T,
     pub start_frame: u32,
     pub end_frame: u32,
     pub play_count: u32,
     pub easing_function: EasingFunction,
     pub direction: Direction,
+}
+
+impl<T: Add<Output = T> + Sub<Output = T> + Mul<f64, Output = T> + Clone> TransitionDescriptor<T> {
+    pub fn calculate_value_at_frame(self, start_value: &T, frame_count: u32) -> T {
+        if frame_count <= self.start_frame {
+            start_value.clone()
+        } else if frame_count >= self.end_frame {
+            self.end_value
+        } else {
+            let timing_progress = f64::from(frame_count - self.start_frame)
+                / f64::from(self.end_frame - self.start_frame);
+
+            let distance = (self.end_value - start_value.clone()) * timing_progress;
+            start_value.clone() + distance
+        }
+    }
 }
 
 pub trait Translate {
@@ -30,20 +51,7 @@ pub trait Translate {
         descriptor: &TransitionDescriptor<Point>,
         frame_count: u32,
     ) {
-        if frame_count >= descriptor.start_frame {
-            let timing_progress = f64::from(frame_count - descriptor.start_frame)
-                / f64::from(descriptor.end_frame - descriptor.start_frame);
-
-            if timing_progress >= 1.0 {
-                self.translate(&descriptor.end_value);
-            } else {
-                let initial_position = self.position();
-                let total_distance = descriptor.end_value - *initial_position;
-                let distance = total_distance * timing_progress;
-                let result_position = *initial_position + distance;
-                self.translate(&result_position);
-            }
-        }
+        self.translate(&descriptor.calculate_value_at_frame(self.position(), frame_count));
     }
 }
 
@@ -69,7 +77,7 @@ pub trait Scale {
         descriptor: &TransitionDescriptor<CoordinateValue>,
         frame_count: u32,
     ) {
-        todo!()
+        self.scale_top(descriptor.calculate_value_at_frame(&self.top(), frame_count));
     }
 
     fn apply_scale_bottom_transition(
@@ -77,7 +85,7 @@ pub trait Scale {
         descriptor: &TransitionDescriptor<CoordinateValue>,
         frame_count: u32,
     ) {
-        todo!()
+        self.scale_bottom(descriptor.calculate_value_at_frame(&self.bottom(), frame_count));
     }
 
     fn apply_scale_left_transition(
@@ -85,7 +93,7 @@ pub trait Scale {
         descriptor: &TransitionDescriptor<CoordinateValue>,
         frame_count: u32,
     ) {
-        todo!()
+        self.scale_left(descriptor.calculate_value_at_frame(&self.left(), frame_count));
     }
 
     fn apply_scale_right_transition(
@@ -93,7 +101,7 @@ pub trait Scale {
         descriptor: &TransitionDescriptor<CoordinateValue>,
         frame_count: u32,
     ) {
-        todo!()
+        self.scale_right(descriptor.calculate_value_at_frame(&self.right(), frame_count));
     }
 }
 
@@ -107,6 +115,6 @@ pub trait Rotate {
         descriptor: &TransitionDescriptor<Rotation>,
         frame_count: u32,
     ) {
-        todo!()
+        self.rotate(descriptor.calculate_value_at_frame(&self.rotation(), frame_count));
     }
 }

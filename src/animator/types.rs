@@ -67,7 +67,30 @@ pub enum Color {
 pub enum Length {
     Pixel(u32),
     Percentage(f64),
-    ScreenHeight(),
+}
+
+impl Add for Length {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        todo!()
+    }
+}
+
+impl Sub for Length {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        todo!()
+    }
+}
+
+impl Mul<f64> for Length {
+    type Output = Self;
+
+    fn mul(self, scalar: f64) -> Self::Output {
+        todo!()
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -154,6 +177,20 @@ pub enum EasingFunction {
     CubicBezier(f64, f64, f64, f64),
 }
 
+impl EasingFunction {
+    pub fn apply(&self, x: f64) -> f64 {
+        match self {
+            Self::Linear => x,
+            Self::CubicBezier(p0, p1, p2, p3) => {
+                (1.0 - x).powi(3) * p0
+                    + 3.0 * (1.0 - x).powi(2) * x * p1
+                    + 3.0 * (1.0 - x) * x.powi(2) * p2
+                    + x.powi(3) * p3
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum Direction {
     Normal,
@@ -161,18 +198,3 @@ pub enum Direction {
     Alternate,
     AlternateReverse,
 }
-
-// #[derive(Debug, Clone, Copy)]
-// pub enum Time {
-//     Frames(u32),
-//     Seconds(f64),
-// }
-//
-// impl Time {
-//     fn as_frame_count(&self, fps: u32) -> u32 {
-//         match self {
-//             Self::Frames(count) => *count,
-//             Self::Seconds(count) => (*count * f64::from(fps)) as u32,
-//         }
-//     }
-// }
