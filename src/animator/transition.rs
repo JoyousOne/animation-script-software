@@ -1,6 +1,9 @@
 use std::ops::{Add, Mul, Sub};
 
-use super::types::{CoordinateValue, Direction, EasingFunction, Point, Rotation};
+use super::{
+    scene::Draw,
+    types::{CoordinateValue, Direction, EasingFunction, Point, Rotation},
+};
 
 #[derive(Clone, Copy)]
 pub enum Transition {
@@ -39,6 +42,39 @@ impl<T: Add<Output = T> + Sub<Output = T> + Mul<f64, Output = T> + Clone> Transi
             start_value.clone() + distance
         }
     }
+}
+
+pub struct TransitionObject<T: Transitionable + Draw + Clone> {
+    pub object: Box<T>,
+    pub transitions: Vec<Transition>,
+}
+
+impl<T: Transitionable + Draw + Clone> TransitionObject<T> {
+    pub fn apply_transitions(&self, frame_count: u32) -> T {
+        let mut object = self.object.clone();
+
+        for transition in &self.transitions {
+            object.apply_transition(transition, frame_count);
+        }
+
+        *object
+    }
+}
+
+impl<T: Transitionable + Draw + Clone> Draw for TransitionObject<T> {
+    fn zindex(&self) -> i32 {
+        self.object.zindex()
+    }
+
+    fn draw(&self, frame_count: u32, frame: &mut super::scene::Frame) {
+        let object = self.apply_transitions(frame_count);
+
+        object.draw(frame_count, frame);
+    }
+}
+
+pub trait Transitionable {
+    fn apply_transition(&mut self, transition: &Transition, frame_count: u32);
 }
 
 pub trait Translate {

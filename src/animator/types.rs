@@ -11,16 +11,6 @@ pub struct Point {
     pub y: CoordinateValue,
 }
 
-impl Point {
-    pub fn dist_x(p1: &Point, p2: &Point) -> CoordinateValue {
-        (p1.x - p2.x).abs()
-    }
-
-    pub fn dist_y(p1: &Point, p2: &Point) -> CoordinateValue {
-        (p1.y - p2.y).abs()
-    }
-}
-
 impl Add for Point {
     type Output = Self;
 
@@ -179,6 +169,14 @@ pub enum EasingFunction {
 
 impl EasingFunction {
     pub fn apply(&self, x: f64) -> f64 {
+        let x = if x < 0.0 {
+            0.0
+        } else if x > 1.0 {
+            1.0
+        } else {
+            x
+        };
+
         match self {
             Self::Linear => x,
             Self::CubicBezier(p0, p1, p2, p3) => {

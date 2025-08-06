@@ -9,7 +9,7 @@ use crate::{
 use animator::{
     objects::shapes::rectangle::Rectangle,
     scene::Scene,
-    transition::{Transition, TransitionDescriptor},
+    transition::{Transition, TransitionDescriptor, TransitionObject},
     types::{Color, Direction, EasingFunction::Linear, Length, Point, Rotation},
 };
 
@@ -161,7 +161,7 @@ fn example3(gif: &mut Gif, height: usize, width: usize) {
 }
 
 fn example_animator() {
-    let rect = Rectangle {
+    let rectangle = Rectangle {
         p1: Point { x: 3.0, y: 4.0 },
         p2: Point { x: 7.0, y: 8.0 },
         rotation: Rotation::Turn(0.0),
@@ -171,19 +171,25 @@ fn example_animator() {
         border_size: Length::Pixel(0),
         outline_color: Color::RGBA(255, 255, 255, 255),
         outline_size: Length::Pixel(0),
-        transitions: vec![Transition::Translate(TransitionDescriptor {
-            end_value: Point { x: 6.0, y: 7.0 },
-            start_frame: 60,
-            end_frame: 359,
-            play_count: 1,
-            easing_function: Linear,
-            direction: Direction::Normal,
-        })],
+    };
+
+    let transitions = vec![Transition::Translate(TransitionDescriptor {
+        end_value: Point { x: 6.0, y: 7.0 },
+        start_frame: 60,
+        end_frame: 359,
+        play_count: 1,
+        easing_function: Linear,
+        direction: Direction::Normal,
+    })];
+
+    let transition_rectangle = TransitionObject {
+        object: Box::from(rectangle),
+        transitions,
     };
 
     let mut scene = Scene::new(20, 20, 360);
 
-    scene.add_object(rect);
+    scene.add_object(transition_rectangle);
 
     let frames = scene.render();
 

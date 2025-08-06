@@ -1,6 +1,6 @@
 use crate::animator::{
     scene::{Draw, Frame},
-    transition::{Rotate, Scale, Transition, Translate},
+    transition::{Rotate, Scale, Transition, Transitionable, Translate},
     types::{Color, CoordinateValue, Length, Point, Rotation},
 };
 
@@ -15,20 +15,10 @@ pub struct Rectangle {
     pub border_size: Length,
     pub outline_color: Color,
     pub outline_size: Length,
-    pub transitions: Vec<Transition>,
 }
 
-impl Rectangle {
-    // TODO transitions should not be contained in the shape but as a super object
-    pub fn apply_transitions(&mut self, frame_count: u32) {
-        let t: Vec<Transition> = self.transitions.to_vec();
-
-        for transition in t {
-            self.apply_transition(&transition, frame_count);
-        }
-    }
-
-    pub fn apply_transition(&mut self, transition: &Transition, frame_count: u32) {
+impl Transitionable for Rectangle {
+    fn apply_transition(&mut self, transition: &Transition, frame_count: u32) {
         match transition {
             Transition::Translate(descriptor) => {
                 self.apply_translate_transition(descriptor, frame_count)
@@ -57,19 +47,16 @@ impl Draw for Rectangle {
         self.z_index
     }
 
-    fn draw(&self, frame_count: u32, frame: &mut Frame) {
-        let mut object = self.clone();
-
-        object.apply_transitions(frame_count);
-
-        let min_x = object.left().max(0.0) as usize;
-        let max_x = object.right().min(frame.xsize() as f64) as usize;
-        let min_y = object.top().max(0.0) as usize;
-        let max_y = object.bottom().min(frame.ysize() as f64) as usize;
+    fn draw(&self, _frame_count: u32, frame: &mut Frame) {
+        // TODO apply rotation
+        let min_x = self.left().max(0.0) as usize;
+        let max_x = self.right().min(frame.xsize() as f64) as usize;
+        let min_y = self.top().max(0.0) as usize;
+        let max_y = self.bottom().min(frame.ysize() as f64) as usize;
 
         for y in min_y..=max_y {
             for x in min_x..=max_x {
-                frame.put_pixel(x, y, object.fill_color);
+                frame.put_pixel(x, y, self.fill_color);
             }
         }
     }
