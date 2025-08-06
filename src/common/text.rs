@@ -31,13 +31,275 @@ impl DefaultLetter {
     }
 }
 
-pub const A: DefaultLetter = DefaultLetter {
+// Font inspired by https://www.dafont.com/minecraft.charmap?back=bitmap
+
+const A: DefaultLetter = DefaultLetter {
     bitmap: [
         [0, 1, 1, 1, 0], // .###.
         [1, 0, 0, 0, 1], // #...#
         [1, 1, 1, 1, 1], // #####
         [1, 0, 0, 0, 1], // #...#
         [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const B: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 0], // ####.
+    ],
+};
+
+const C: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 1, 1, 1, 0], // .###.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 1, 1, 0], // .###.
+    ],
+};
+
+const D: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 0], // ####.
+    ],
+};
+
+const E: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 1], // #####
+        [1, 0, 0, 0, 0], // #....
+        [1, 1, 1, 1, 0], // #####
+        [1, 0, 0, 0, 0], // #....
+        [1, 1, 1, 1, 1], // #####
+    ],
+};
+
+const F: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 1], // #####
+        [1, 0, 0, 0, 0], // #....
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 0], // #....
+    ],
+};
+
+const G: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 1, 1, 1, 1], // .####
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 1, 1, 1], // #.###
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 1, 1, 0], // .###.
+    ],
+};
+
+const H: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 1], // #####
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const I: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 1], // #####
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+        [1, 1, 1, 1, 1], // #####
+    ],
+};
+
+const J: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 0, 0, 1, 0], // ...#.
+        [0, 0, 0, 1, 0], // ...#.
+        [0, 0, 0, 1, 0], // ...#.
+        [1, 0, 0, 1, 0], // #..#.
+        [0, 1, 1, 1, 0], // .###.
+    ],
+};
+
+const K: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 1, 0], // #..#.
+        [1, 1, 1, 0, 0], // ###..
+        [1, 0, 0, 1, 0], // #..#.
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const L: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 0], // #....
+        [1, 1, 1, 1, 1], // #####
+    ],
+};
+
+const M: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 0, 1, 1], // ##.##
+        [1, 0, 1, 0, 1], // #.#.#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const N: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 0, 0, 1], // ##..#
+        [1, 0, 1, 0, 1], // #.#.#
+        [1, 0, 0, 1, 1], // #..##
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const O: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 1, 1, 1, 0], // .###.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 1, 1, 0], // .###.
+    ],
+};
+
+const P: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 0], // #....
+        [1, 0, 0, 0, 0], // #....
+    ],
+};
+
+const Q: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 1, 1, 0, 0], // .##..
+        [1, 0, 0, 1, 0], // #..#.
+        [1, 0, 0, 1, 0], // #..#.
+        [1, 0, 0, 1, 0], // #..#.
+        [0, 1, 1, 1, 1], // .####
+    ],
+};
+
+const R: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 0, 0, 1], // #...#
+        [1, 1, 1, 1, 0], // ####.
+        [1, 0, 1, 0, 0], // #.#..
+        [1, 0, 0, 1, 0], // #..#.
+    ],
+};
+
+const S: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 1, 1, 1, 1], // .####
+        [1, 0, 0, 0, 0], // #....
+        [0, 1, 1, 1, 0], // .###.
+        [0, 0, 0, 0, 1], // ....#
+        [1, 1, 1, 1, 0], // ####.
+    ],
+};
+
+const T: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 1], // #####
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+    ],
+};
+
+const U: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 1, 1, 0], // .###.
+    ],
+};
+
+const V: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 0, 1, 0], // .#.#.
+        [0, 1, 0, 1, 0], // .#.#.
+        [0, 0, 1, 0, 0], // ..#..
+    ],
+};
+
+const W: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 0, 0, 1], // #...#
+        [1, 0, 1, 0, 1], // #.#.#
+        [1, 1, 0, 1, 1], // ##.##
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const X: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 0, 1, 0], // .#.#.
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 1, 0, 1, 0], // .#.#.
+        [1, 0, 0, 0, 1], // #...#
+    ],
+};
+
+const Y: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 0, 0, 0, 1], // #...#
+        [0, 1, 0, 1, 0], // .#.#.
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 0, 1, 0, 0], // ..#..
+    ],
+};
+
+const Z: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [1, 1, 1, 1, 1], // #####
+        [0, 0, 0, 1, 0], // ...#.
+        [0, 0, 1, 0, 0], // ..#..
+        [0, 1, 0, 0, 0], // .#...
+        [1, 1, 1, 1, 1], // #####
+    ],
+};
+
+const _A: DefaultLetter = DefaultLetter {
+    bitmap: [
+        [0, 0, 0, 0, 0], // .....
+        [0, 0, 0, 0, 0], // .....
+        [0, 0, 0, 0, 0], // .....
+        [0, 0, 0, 0, 0], // .....
+        [0, 0, 0, 0, 0], // .....
     ],
 };
 
@@ -50,7 +312,34 @@ pub struct Text {
 impl Text {
     pub fn new() -> Self {
         Text {
-            letters_in_memory: HashMap::from([(('A', DEFAULT_FONT_SIZE), A.to_vec2d())]),
+            letters_in_memory: HashMap::from([
+                (('A', DEFAULT_FONT_SIZE), A.to_vec2d()),
+                (('B', DEFAULT_FONT_SIZE), B.to_vec2d()),
+                (('C', DEFAULT_FONT_SIZE), C.to_vec2d()),
+                (('D', DEFAULT_FONT_SIZE), D.to_vec2d()),
+                (('E', DEFAULT_FONT_SIZE), E.to_vec2d()),
+                (('F', DEFAULT_FONT_SIZE), F.to_vec2d()),
+                (('G', DEFAULT_FONT_SIZE), G.to_vec2d()),
+                (('H', DEFAULT_FONT_SIZE), H.to_vec2d()),
+                (('I', DEFAULT_FONT_SIZE), I.to_vec2d()),
+                (('J', DEFAULT_FONT_SIZE), J.to_vec2d()),
+                (('K', DEFAULT_FONT_SIZE), K.to_vec2d()),
+                (('L', DEFAULT_FONT_SIZE), L.to_vec2d()),
+                (('M', DEFAULT_FONT_SIZE), M.to_vec2d()),
+                (('N', DEFAULT_FONT_SIZE), N.to_vec2d()),
+                (('O', DEFAULT_FONT_SIZE), O.to_vec2d()),
+                (('P', DEFAULT_FONT_SIZE), P.to_vec2d()),
+                (('Q', DEFAULT_FONT_SIZE), Q.to_vec2d()),
+                (('R', DEFAULT_FONT_SIZE), R.to_vec2d()),
+                (('S', DEFAULT_FONT_SIZE), S.to_vec2d()),
+                (('T', DEFAULT_FONT_SIZE), T.to_vec2d()),
+                (('U', DEFAULT_FONT_SIZE), U.to_vec2d()),
+                (('V', DEFAULT_FONT_SIZE), V.to_vec2d()),
+                (('W', DEFAULT_FONT_SIZE), W.to_vec2d()),
+                (('X', DEFAULT_FONT_SIZE), X.to_vec2d()),
+                (('Y', DEFAULT_FONT_SIZE), Y.to_vec2d()),
+                (('Z', DEFAULT_FONT_SIZE), Z.to_vec2d()),
+            ]),
         }
     }
 
