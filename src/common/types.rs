@@ -30,3 +30,15 @@ impl Position {
         Position { x, y }
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct IPosition {
+    pub x: isize,
+    pub y: isize,
+}
+
+impl IPosition {
+    pub fn new(x: isize, y: isize) -> Self {
+        IPosition { x, y }
+    }
+}

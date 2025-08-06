@@ -1,7 +1,10 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    common::types::{Color, Pixel, Position},
+    common::{
+        text::FontSize,
+        types::{Color, IPosition, Pixel, Position},
+    },
     format::image::{Image, ImageFormat},
 };
 
@@ -49,6 +52,21 @@ impl ImageFormat<Color> for GifImage {
 
         self.image
             .draw_rectangle(top_left, bottom_right, color_index);
+
+        self
+    }
+
+    fn draw_text(
+        &mut self,
+        letter: &str,
+        font_size: FontSize,
+        top_left: crate::common::types::IPosition,
+        color: &Color,
+    ) -> &mut Self {
+        let color_index = self.get_color_index(color) as u8;
+
+        self.image
+            .draw_text(letter, font_size, top_left, color_index);
 
         self
     }
