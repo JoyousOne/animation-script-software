@@ -400,13 +400,12 @@ const MIN_K_BITMAP: &[[u8; 4]] = &[
     [1, 0, 0, 1], // #..#
 ];
 
-// FIXME problematic when size differ
-const MIN_L_BITMAP: &[[u8; 1]] = &[
-    [1], // #
-    [1], // #
-    [1], // #
-    [1], // #
-    [1], // #
+const MIN_L_BITMAP: &[[u8; 3]] = &[
+    [1, 1, 0], // ##.
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [0, 0, 1], // ..#
 ];
 
 const MIN_M_BITMAP: &[[u8; 5]] = &[
@@ -526,24 +525,6 @@ const MIN_Z_BITMAP: &[[u8; 4]] = &[
 
 /** Numerical **/
 
-// const BITMAP_0: &[[u8; 5]] = &[
-//     [0, 1, 1, 1, 0], // .....
-//     [1, 0, 0, 0, 1], // .....
-//     [1, 0, 0, 1, 1], // .....
-//     [1, 0, 1, 0, 1], // .....
-//     [1, 1, 0, 0, 1], // .....
-//     [0, 1, 1, 1, 0], // .....
-// ];
-
-// const BITMAP_0: &[[u8; 4]] = &[
-//     [0, 1, 1, 0], // .....
-//     [1, 0, 0, 1], // .....
-//     [1, 0, 1, 1], // .....
-//     [1, 1, 0, 1], // .....
-//     [1, 0, 0, 1], // .....
-//     [0, 1, 1, 0], // .....
-// ];
-
 const BITMAP_0: &[[u8; 4]] = &[
     [0, 1, 1, 0], // .....
     [1, 1, 0, 1], // .....
@@ -624,13 +605,277 @@ const BITMAP_9: &[[u8; 5]] = &[
     [0, 0, 0, 0, 1], // .....
 ];
 
-// const BITMAP_0: &[[u8; 5]] = &[
-//     [0, 0, 0, 0, 0], // .....
-//     [0, 0, 0, 0, 0], // .....
-//     [0, 0, 0, 0, 0], // .....
-//     [0, 0, 0, 0, 0], // .....
-//     [0, 0, 0, 0, 0], // .....
-// ];
+/** Special chars **/
+
+const BITMAP_LEFT_PARENTHESE: &[[u8; 2]] = &[
+    [0, 1], // .#
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [0, 1], // .#
+];
+
+const BITMAP_RIGHT_PARENTHESE: &[[u8; 2]] = &[
+    [1, 0], // #.
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [1, 0], // #.
+];
+
+const BITMAP_LEFT_BRACKET: &[[u8; 2]] = &[
+    [1, 1], // ##
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 0], // #.
+    [1, 1], // ##
+];
+
+const BITMAP_RIGHT_BRACKET: &[[u8; 2]] = &[
+    [1, 1], // ##
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [0, 1], // .#
+    [1, 1], // ##
+];
+const BITMAP_LEFT_BRACE: &[[u8; 3]] = &[
+    [0, 0, 1], // ..#
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [1, 0, 0], // #..
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [0, 0, 1], // ..#
+];
+
+const BITMAP_RIGHT_BRACE: &[[u8; 3]] = &[
+    [1, 0, 0], // #..
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [0, 0, 1], // ..#
+    [0, 1, 0], // .#.
+    [0, 1, 0], // .#.
+    [1, 0, 0], // #..
+];
+
+const BITMAP_PLUS: &[[u8; 5]] = &[
+    [0, 0, 1, 0, 0], // ..#..
+    [0, 0, 1, 0, 0], // ..#..
+    [1, 1, 1, 1, 1], // #####
+    [0, 0, 1, 0, 0], // ..#..
+    [0, 0, 1, 0, 0], // ..#..
+];
+
+const BITMAP_HYPHEN: &[[u8; 4]] = &[
+    [0, 0, 0, 0], // ....
+    [0, 0, 0, 0], // ....
+    [1, 1, 1, 1], // ####
+    [0, 0, 0, 0], // ....
+    [0, 0, 0, 0], // ....
+];
+
+const BITMAP_ASTERISK: &[[u8; 5]] = &[
+    [1, 0, 1, 0, 1], // #..#
+    [0, 1, 1, 1, 0], // .##.
+    [1, 0, 1, 0, 1], // #..#
+    [0, 0, 0, 0, 0], // ....
+    [0, 0, 0, 0, 0], // ....
+];
+
+const BITMAP_EQUAL: &[[u8; 5]] = &[
+    [0, 0, 0, 0, 0], // .....
+    [1, 1, 1, 1, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [1, 1, 1, 1, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+];
+
+const BITMAP_PERCENT: &[[u8; 5]] = &[
+    [1, 0, 0, 0, 1], // .....
+    [0, 0, 0, 1, 0], // .....
+    [0, 0, 1, 0, 0], // .....
+    [0, 1, 0, 0, 0], // .....
+    [1, 0, 0, 0, 1], // .....
+];
+
+const BITMAP_SLASH: &[[u8; 5]] = &[
+    [0, 0, 0, 0, 1], // .....
+    [0, 0, 0, 1, 0], // .....
+    [0, 0, 1, 0, 0], // .....
+    [0, 1, 0, 0, 0], // .....
+    [1, 0, 0, 0, 0], // .....
+];
+
+const BITMAP_BACKSLASH: &[[u8; 5]] = &[
+    [1, 0, 0, 0, 0], // .....
+    [0, 1, 0, 0, 0], // .....
+    [0, 0, 1, 0, 0], // .....
+    [0, 0, 0, 1, 0], // .....
+    [0, 0, 0, 0, 1], // .....
+];
+
+const BITMAP_QUOTE_DOUBLE: &[[u8; 3]] = &[
+    [1, 0, 1], // #.#
+    [1, 0, 1], // #.#
+    [0, 0, 0], // ...
+    [0, 0, 0], // ...
+    [0, 0, 0], // ...
+];
+
+const BITMAP_QUOTE_SINGLE: &[[u8; 1]] = &[
+    [1], // #.
+    [1], // #.
+    [0], // ..
+    [0], // ..
+    [0], // ..
+];
+
+const BITMAP_HASHTAG: &[[u8; 5]] = &[
+    [0, 1, 0, 1, 0], // .#.#
+    [1, 1, 1, 1, 1], // #####
+    [0, 1, 0, 1, 0], // .#.#.
+    [1, 1, 1, 1, 1], // #####
+    [0, 1, 0, 1, 0], // .#.#.
+];
+
+const BITMAP_AT: &[[u8; 5]] = &[
+    [1, 1, 1, 1, 1], // #####
+    [1, 0, 0, 0, 1], // #...#
+    [1, 1, 1, 1, 1], // #####
+    [1, 1, 0, 1, 1], // ##.##
+    [1, 1, 1, 1, 1], // #####
+    [1, 0, 0, 0, 0], // #....
+    [1, 1, 1, 1, 1], // #####
+];
+
+const BITMAP_AMPERSAND: &[[u8; 5]] = &[
+    [0, 0, 1, 0, 0], // ..#..
+    [0, 1, 0, 1, 0], // .#.#.
+    [0, 1, 0, 0, 1], // .#..#
+    [1, 0, 1, 0, 0], // #.#..
+    [1, 0, 0, 1, 0], // #..#.
+    [0, 1, 1, 0, 0], // .##..
+];
+
+const BITMAP_UNDERSCORE: &[[u8; 5]] = &[
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [1, 1, 1, 1, 1], // #####
+];
+
+const BITMAP_COMMA: &[[u8; 2]] = &[
+    [0, 0], // .....
+    [0, 0], // .....
+    [0, 0], // .....
+    [0, 0], // .....
+    [0, 0], // .....
+    [0, 1], // .#...
+    [1, 0], // #....
+];
+
+const BITMAP_PERIOD: &[[u8; 1]] = &[
+    [0], // .
+    [0], // .
+    [0], // .
+    [0], // .
+    [0], // .
+    [1], // #
+];
+
+const BITMAP_SEMICOLON: &[[u8; 2]] = &[
+    [0, 0], // ..
+    [0, 0], // ..
+    [0, 1], // .#
+    [0, 0], // ..
+    [0, 1], // .#
+    [1, 0], // #.
+];
+
+const BITMAP_COLON: &[[u8; 2]] = &[
+    [0, 0], // ..
+    [0, 0], // ..
+    [0, 1], // .#
+    [0, 0], // ..
+    [0, 1], // .#
+];
+
+const BITMAP_QUESTION: &[[u8; 4]] = &[
+    [0, 1, 1, 0], // .##.
+    [1, 0, 0, 1], // #..#
+    [0, 0, 0, 1], // ...#
+    [0, 0, 1, 0], // ..#.
+    [0, 1, 0, 0], // .#..
+    [0, 0, 0, 0], // ....
+    [0, 1, 0, 0], // .#..
+];
+
+const BITMAP_EXCLAMATION: &[[u8; 1]] = &[
+    [1], // #....
+    [1], // #....
+    [1], // #....
+    [0], // .....
+    [1], // #....
+];
+
+const BITMAP_BAR: &[[u8; 1]] = &[
+    [1], // #
+    [1], // #
+    [1], // #
+    [1], // #
+    [1], // #
+    [1], // #
+];
+
+const BITMAP_LESS: &[[u8; 3]] = &[
+    [0, 0, 1], // ..#
+    [0, 1, 0], // .#.
+    [1, 0, 0], // #..
+    [0, 1, 0], // .#.
+    [0, 0, 1], // ..#
+];
+
+const BITMAP_GREATER: &[[u8; 3]] = &[
+    [1, 0, 0], // #..
+    [0, 1, 0], // .#.
+    [0, 0, 1], // ..#
+    [0, 1, 0], // .#.
+    [1, 0, 0], // #..
+];
+
+const BITMAP_CIRCUM: &[[u8; 5]] = &[
+    [0, 0, 1, 0, 0], // .....
+    [0, 1, 0, 1, 0], // .....
+    [1, 0, 0, 0, 1], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+];
+
+const BITMAP_TILDE: &[[u8; 4]] = &[
+    [0, 0, 0, 0], // ....
+    [0, 0, 0, 0], // ....
+    [1, 1, 0, 0], // ##..
+    [0, 0, 1, 1], // ..##
+    [0, 0, 0, 0], // ....
+];
+
+const BITMAP_SPACE: &[[u8; 5]] = &[
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+    [0, 0, 0, 0, 0], // .....
+];
 
 const UNKNOWN_BITMAP: &[[u8; 5]] = &[
     [1, 1, 1, 1, 1], // #####
@@ -715,6 +960,38 @@ impl Text {
                 (('7', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_7)),
                 (('8', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_8)),
                 (('9', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_9)),
+                // Special characters
+                (('(', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_LEFT_PARENTHESE)),
+                ((')', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_RIGHT_PARENTHESE)),
+                (('[', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_LEFT_BRACKET)),
+                ((']', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_RIGHT_BRACKET)),
+                (('{', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_LEFT_BRACE)),
+                (('}', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_RIGHT_BRACE)),
+                (('+', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_PLUS)),
+                (('-', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_HYPHEN)),
+                (('*', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_ASTERISK)),
+                (('=', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_EQUAL)),
+                (('%', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_PERCENT)),
+                (('/', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_SLASH)),
+                (('\\', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_BACKSLASH)),
+                ((' ', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_SPACE)),
+                (('\"', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_QUOTE_DOUBLE)),
+                (('\'', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_QUOTE_SINGLE)),
+                (('#', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_HASHTAG)),
+                (('@', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_AT)),
+                (('&', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_AMPERSAND)),
+                (('_', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_UNDERSCORE)),
+                ((',', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_COMMA)),
+                (('.', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_PERIOD)),
+                ((';', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_SEMICOLON)),
+                ((':', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_COLON)),
+                (('?', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_QUESTION)),
+                (('!', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_EXCLAMATION)),
+                (('|', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_BAR)),
+                (('<', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_LESS)),
+                (('>', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_GREATER)),
+                (('^', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_CIRCUM)),
+                (('~', DEFAULT_FONT_SIZE), to_vec2d(BITMAP_TILDE)),
                 // Special character for unknown variables
                 (('\0', DEFAULT_FONT_SIZE), to_vec2d(UNKNOWN_BITMAP)),
             ]),
@@ -758,11 +1035,6 @@ impl Text {
 
         let res_h = font_size;
         let res_w = font_size - diff_w as usize; // TODO may differ later
-
-        // if letter == 'a' {
-        //     println!("diff_w: {diff_w}");
-        //     println!("res_w: {res_w}");
-        // }
 
         for y in 0..res_h {
             let src_y = y * src_h / res_h;
