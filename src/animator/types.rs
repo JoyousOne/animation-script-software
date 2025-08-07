@@ -122,6 +122,14 @@ impl Rotation {
             Self::Radian(_) => self,
         }
     }
+
+    pub fn sin(&self) -> f64 {
+        self.as_radian().value().sin()
+    }
+
+    pub fn cos(&self) -> f64 {
+        self.as_radian().value().cos()
+    }
 }
 
 impl Add for Rotation {
@@ -160,6 +168,69 @@ impl Mul<f64> for Rotation {
     }
 }
 
+pub fn cubic_bezier(t: f64, p0: Point, p1: Point, p2: Point, p3: Point) -> Point {
+    let x = (1.0 - t).powi(3) * p0.x
+        + 3.0 * (1.0 - t).powi(2) * t * p1.x
+        + 3.0 * (1.0 - t) * t.powi(2) * p2.x
+        + t.powi(3) * p3.x;
+
+    let y = (1.0 - t).powi(3) * p0.y
+        + 3.0 * (1.0 - t).powi(2) * t * p1.y
+        + 3.0 * (1.0 - t) * t.powi(2) * p2.y
+        + t.powi(3) * p3.y;
+
+    Point { x, y }
+}
+
+pub fn cubic_bezier_derivative(t: f64, p0: Point, p1: Point, p2: Point, p3: Point) -> Point {
+    let x = -3.0 * (1.0 - t).powi(2) * p0.x + 3.0 * (1.0 - t).powi(2) * p1.x
+        - 6.0 * (1.0 - t) * t * p1.x
+        + 6.0 * (1.0 - t) * t * p2.x
+        - 3.0 * t.powi(2) * p2.x
+        + 3.0 * t.powi(2) * p3.x;
+
+    let y = -3.0 * (1.0 - t).powi(2) * p0.y + 3.0 * (1.0 - t).powi(2) * p1.y
+        - 6.0 * (1.0 - t) * t * p1.y
+        + 6.0 * (1.0 - t) * t * p2.y
+        - 3.0 * t.powi(2) * p2.y
+        + 3.0 * t.powi(2) * p3.y;
+
+    Point { x, y }
+}
+
+pub fn newton_root_finding<F, D>(
+    function: F,
+    derivative: D,
+    target: f64,
+    initial_x: f64,
+    max_x: f64,
+    min_x: f64,
+    max_iter: usize,
+    convergence_threshold: f64,
+) -> f64
+where
+    F: Fn(f64) -> f64,
+    D: Fn(f64) -> f64,
+{
+    let mut x = initial_x;
+
+    for i in 0..max_iter {
+        let y = function(x);
+        let dy = derivative(x);
+
+        let new_x = x - (y - target) / dy;
+
+        if (new_x - x).abs() < convergence_threshold {
+            println!("i = {i} with diff: {:?}", (new_x - x).abs());
+            return new_x;
+        }
+
+        x = new_x.clamp(max_x, min_x);
+    }
+
+    x
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum EasingFunction {
     Linear,
@@ -169,21 +240,30 @@ pub enum EasingFunction {
 
 impl EasingFunction {
     pub fn apply(&self, x: f64) -> f64 {
-        let x = if x < 0.0 {
-            0.0
-        } else if x > 1.0 {
-            1.0
-        } else {
-            x
-        };
+        let x = x.clamp(0.0, 1.0);
 
         match self {
             Self::Linear => x,
-            Self::CubicBezier(p0, p1, p2, p3) => {
-                (1.0 - x).powi(3) * p0
-                    + 3.0 * (1.0 - x).powi(2) * x * p1
-                    + 3.0 * (1.0 - x) * x.powi(2) * p2
-                    + x.powi(3) * p3
+            Self::CubicBezier(x1, y1, x2, y2) => {
+                let p0 = Point { x: 0.0, y: 0.0 };
+                let p1 = Point { x: *x1, y: *y1 };
+                let p2 = Point { x: *x2, y: *y2 };
+                let p3 = Point { x: 1.0, y: 1.0 };
+
+                let t = newton_root_finding(
+                    |t| cubic_bezier(t, p0, p1, p2, p3).x,
+                    |t| cubic_bezier_derivative(t, p0, p1, p2, p3).x,
+                    x,
+                    0.5,
+                    0.0,
+                    1.0,
+                    100,
+                    1e-10,
+                );
+
+                let point = cubic_bezier(t, p0, p1, p2, p3);
+
+                point.y
             }
         }
     }

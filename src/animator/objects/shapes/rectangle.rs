@@ -17,6 +17,52 @@ pub struct Rectangle {
     pub outline_size: Length,
 }
 
+impl Rectangle {
+    pub fn center(&self) -> Point {
+        Point {
+            x: (self.p1.x + self.p2.x) / 2.0,
+            y: (self.p1.y + self.p2.y) / 2.0,
+        }
+    }
+
+    pub fn corners(&self) -> Vec<Point> {
+        let corners = [
+            self.p1,
+            self.p2,
+            Point {
+                x: self.p1.x,
+                y: self.p2.y,
+            },
+            Point {
+                x: self.p2.x,
+                y: self.p1.y,
+            },
+        ];
+
+        let center = self.center();
+
+        let rotated_corners = corners
+            .iter()
+            .map(|&corner| {
+                let relative_x = corner.x - center.x;
+                let relative_y = corner.y - center.y;
+
+                let rotated_relative_x =
+                    relative_x * self.rotation.cos() - relative_y * self.rotation.sin();
+                let rotated_relative_y =
+                    relative_x * self.rotation.sin() + relative_y * self.rotation.cos();
+
+                Point {
+                    x: rotated_relative_x + center.x,
+                    y: rotated_relative_y + center.y,
+                }
+            })
+            .collect();
+
+        rotated_corners
+    }
+}
+
 impl Transitionable for Rectangle {
     fn apply_transition(&mut self, transition: &Transition, frame_count: u32) {
         match transition {

@@ -38,7 +38,9 @@ impl<T: Add<Output = T> + Sub<Output = T> + Mul<f64, Output = T> + Clone> Transi
             let timing_progress = f64::from(frame_count - self.start_frame)
                 / f64::from(self.end_frame - self.start_frame);
 
-            let distance = (self.end_value - start_value.clone()) * timing_progress;
+            let eased_timing_progress = self.easing_function.apply(timing_progress);
+
+            let distance = (self.end_value - start_value.clone()) * eased_timing_progress;
             start_value.clone() + distance
         }
     }
