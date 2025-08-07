@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::common::{
-    text::{FontSize, get_or_init_text},
+    text::{FontSize, Letter, get_or_init_text},
     types::{IPosition, Position},
 };
 
@@ -171,15 +171,19 @@ where
         let font_size_2 = font_size.get_value() as isize;
         let spacing = font_size_2 / 3;
 
+        // Fetch text to reuse already instanciated letter size
+        let mut text = get_or_init_text().lock().unwrap();
+
         let mut current_offset = 0;
         // NOTE could be done in parallel
         for c in chars {
             let mut current_top_left = top_left;
             current_top_left.x += current_offset;
+            let letter = text.get_letter(c, font_size);
 
-            self.draw_letter(c, font_size, current_top_left, color);
+            self.draw_letter(letter, current_top_left, color);
 
-            current_offset += spacing + font_size_2;
+            current_offset += spacing + letter[0].len() as isize;
         }
 
         self.coalesce();
@@ -187,17 +191,7 @@ where
         self
     }
 
-    pub fn draw_letter(
-        &mut self,
-        letter: char,
-        font_size: FontSize,
-        top_left: IPosition,
-        color: T,
-    ) -> &mut Self {
-        // Fetch text to reuse already instanciated letter size
-        let mut text = get_or_init_text().lock().unwrap();
-        let letter = text.get_letter(letter, font_size);
-
+    pub fn draw_letter(&mut self, letter: &Letter, top_left: IPosition, color: T) -> &mut Self {
         let (letter_h, letter_w) = (letter.len(), letter[0].len());
 
         // TODO factorize the following to use with other function
