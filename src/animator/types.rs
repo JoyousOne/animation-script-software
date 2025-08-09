@@ -214,14 +214,13 @@ where
 {
     let mut x = initial_x;
 
-    for i in 0..max_iter {
+    for _ in 0..max_iter {
         let y = function(x);
         let dy = derivative(x);
 
         let new_x = x - (y - target) / dy;
 
         if (new_x - x).abs() < convergence_threshold {
-            println!("i = {i} with diff: {:?}", (new_x - x).abs());
             return new_x;
         }
 
@@ -232,9 +231,17 @@ where
 }
 
 #[derive(Debug, Clone, Copy)]
+pub enum StepJump {
+    JumpNone,
+    JumpStart,
+    JumpEnd,
+    JumpBoth,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum EasingFunction {
     Linear,
-    // Steps(Box<Self>), // TODO setup with jump end etc
+    Steps(u32, StepJump),
     CubicBezier(f64, f64, f64, f64),
 }
 
@@ -244,6 +251,25 @@ impl EasingFunction {
 
         match self {
             Self::Linear => x,
+            Self::Steps(count, jump) => {
+                let segments = match jump {
+                    StepJump::JumpNone => *count - 1,
+                    StepJump::JumpStart | StepJump::JumpEnd => *count,
+                    StepJump::JumpBoth => *count + 1,
+                };
+
+                let step_progress = 1.0 / f64::from(segments);
+                let step_duration = 1.0 / f64::from(*count);
+
+                let current_step = (x / step_duration).floor();
+
+                match jump {
+                    StepJump::JumpNone | StepJump::JumpEnd => current_step * step_progress,
+                    StepJump::JumpStart | StepJump::JumpBoth => {
+                        (current_step + 1.0) * step_progress
+                    }
+                }
+            }
             Self::CubicBezier(x1, y1, x2, y2) => {
                 let p0 = Point { x: 0.0, y: 0.0 };
                 let p1 = Point { x: *x1, y: *y1 };
