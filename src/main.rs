@@ -17,24 +17,6 @@ mod animator;
 mod common;
 mod format;
 
-fn main() {
-    // example_animator();
-
-    let (height, width) = (10u16, 10u16);
-    let mut gif = Gif::new(height, width, Some(Loop::Forever));
-
-    // example1(&mut gif, height, width);
-    // example2(&mut gif, height, width);
-    // example3(&mut gif, height, width);
-
-    // DEBUG
-    // gif.debug(None);
-
-    let filename = "./test.gif";
-    // let filename = "./chud.gif";
-    let _ = gif.write_to_file(filename);
-}
-
 #[rustfmt::skip]
 const BLACK: Pixel = Pixel {r: 0, g: 0, b: 0,};
 #[rustfmt::skip]
@@ -44,10 +26,27 @@ const BLUE: Pixel = Pixel {r: 0, g: 0, b: 255,};
 #[rustfmt::skip]
 const WHITE: Pixel = Pixel {r: 255, g: 255, b: 255,};
 
-fn example1(gif: &mut Gif, height: usize, width: usize) {
-    let white = Pixel::new(255, 255, 255);
-    let red = Pixel::new(255, 0, 0);
+fn main() {
+    // example_animator();
 
+    let (height, width) = (10u16, 10u16);
+
+    let mut gif = Gif::new(height, width, Some(Loop::Forever));
+
+    // example1(&mut gif, height, width);
+    // example2(&mut gif, height, width);
+    // example3(&mut gif, height, width);
+    // example_text();
+
+    // DEBUG
+    // gif.debug(None);
+
+    // let filename = "./lol.gif";
+    // let filename = "./test.gif";
+    // let _ = gif.write_to_file(filename);
+}
+
+fn example1(gif: &mut Gif, height: usize, width: usize) {
     gif.add_image()
         .add_delay(100)
         .fill(&RED)
@@ -74,12 +73,12 @@ fn example1(gif: &mut Gif, height: usize, width: usize) {
         .draw_rectangle(
             Position::new(width / 2, 0),
             Position::new(width, height / 2),
-            &red,
+            &RED,
         )
         .draw_rectangle(
             Position::new(0, height / 2),
             Position::new(width / 2, height),
-            &red,
+            &RED,
         )
         .draw_rectangle(
             Position::new(width / 3, height / 3),
@@ -158,6 +157,78 @@ fn example3(gif: &mut Gif, height: usize, width: usize) {
         ),
         &WHITE,
     );
+}
+
+fn example_text() {
+    let (height, width) = (80u16, 120u16);
+    let mut gif = Gif::new(height, width, Some(Loop::Forever));
+
+    gif.add_image()
+        .fill(&WHITE)
+        .draw_text(
+            "ABCDEFGHIJ",
+            common::text::FontSize::Default,
+            common::types::IPosition { x: 2, y: 5 },
+            &RED,
+        )
+        .draw_text(
+            "KMNOPQRSTU",
+            common::text::FontSize::Default,
+            common::types::IPosition { x: 2, y: 12 },
+            &RED,
+        )
+        .draw_text(
+            "VWXYZ",
+            common::text::FontSize::Default,
+            common::types::IPosition { x: 2, y: 19 },
+            &RED,
+        )
+        // Min
+        .draw_text(
+            "abcdefghij",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 26 },
+            &RED,
+        )
+        .draw_text(
+            "klmnopqrstu",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 33 },
+            &RED,
+        )
+        .draw_text(
+            "vwxyz",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 40 },
+            &RED,
+        )
+        .draw_text(
+            "0123456789",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 47 },
+            &RED,
+        )
+        .draw_text(
+            "()[]{}+-*=% / \\ \" ' #@",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 54 },
+            &RED,
+        )
+        .draw_text(
+            "_&a,a.;:?!|<>^~",
+            common::text::FontSize::Default,
+            // common::text::FontSize::Size(8),
+            common::types::IPosition { x: 2, y: 64 },
+            &RED,
+        );
+
+    let filename = "./text.gif";
+    let _ = gif.write_to_file(filename);
 }
 
 fn example_animator() {

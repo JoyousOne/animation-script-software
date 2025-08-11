@@ -1,6 +1,12 @@
-use std::fmt::{Debug, Display};
+use std::{
+    cmp::{max, min},
+    fmt::{Debug, Display},
+};
 
-use crate::common::types::Position;
+use crate::common::{
+    text::{FontSize, Letter, get_or_init_text},
+    types::{IPosition, Position},
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RLE<T> {
@@ -25,6 +31,15 @@ pub trait ImageFormat<T> {
         bottom_right: Position,
         color: &T,
     ) -> &mut Self;
+
+    /// Draw text
+    fn draw_text(
+        &mut self,
+        letter: &str,
+        font_size: FontSize,
+        top_left: IPosition,
+        color: &T,
+    ) -> &mut Self;
 }
 
 pub struct Image<T> {
@@ -35,7 +50,7 @@ pub struct Image<T> {
 
 impl<T> Image<T>
 where
-    T: Clone + Copy + Display + Debug,
+    T: Clone + Copy + Ord + Display + Debug,
 {
     pub fn new(height: usize, width: usize, default_color: T) -> Self {
         Image {
@@ -43,6 +58,24 @@ where
             width,
             pixels_indexes: vec![RLE::new((width * height) as usize, default_color.clone())],
         }
+    }
+
+    /// Merge adjacent entries of the pixel_indexes when they have the same values
+    fn coalesce(&mut self) {
+        let mut result: Vec<RLE<T>> = Vec::with_capacity(self.pixels_indexes.len());
+
+        for rle in &self.pixels_indexes {
+            if let Some(lst) = result.last_mut() {
+                if lst.value == rle.value {
+                    lst.freq += rle.freq;
+                    continue;
+                }
+            }
+
+            result.push(rle.clone());
+        }
+
+        self.pixels_indexes = result;
     }
 
     fn add_interval(&mut self, interval_start: usize, interval_end: usize, color: T) {
@@ -55,6 +88,10 @@ where
 
         let mut current_index = 0;
         let mut new_entries = vec![RLE::new(freq, color)];
+
+        // For very specific cases
+        let mut same_interval_when_end_reached = false;
+
         for p in &mut self.pixels_indexes {
             end_count += p.freq;
 
@@ -68,8 +105,13 @@ where
             }
 
             // If end of interval in current interval
-            if start_count < interval_end && interval_end <= end_count {
+            if start_count <= interval_end && interval_end <= end_count {
                 index_end = current_index;
+
+                // We do not forget to update the index start in case it is never touched
+                if interval_start == interval_end {
+                    same_interval_when_end_reached = true;
+                }
 
                 let diff = end_count as isize - (interval_end + 1) as isize;
                 if diff > 0 {
@@ -88,11 +130,18 @@ where
             current_index += 1;
         }
         // DEBUG
+        // println!("index_start: {index_start}, index_end: {index_end}");
         // println!("new_entries: {new_entries:?}");
+        // println!();
 
         // Adding the new entries and replacing the one changed
-        self.pixels_indexes
-            .splice(index_start..index_end + 1, new_entries);
+        if same_interval_when_end_reached && new_entries.len() == 1 {
+            self.pixels_indexes
+                .insert(index_end + 1, new_entries[0].clone());
+        } else {
+            self.pixels_indexes
+                .splice(index_start..index_end + 1, new_entries);
+        }
     }
 
     pub fn fill(&mut self, color: T) -> &mut Self {
@@ -106,6 +155,70 @@ where
             let interval_start = y * self.width as usize + start.x;
             let interval_end = y * self.width as usize + end.x;
             self.add_interval(interval_start, interval_end, color);
+        }
+
+        self
+    }
+
+    pub fn draw_text(
+        &mut self,
+        text: &str,
+        font_size: FontSize,
+        top_left: IPosition,
+        color: T,
+    ) -> &mut Self {
+        let chars = text.chars();
+        let font_size_2 = font_size.get_value() as isize;
+        let spacing = font_size_2 / 3;
+
+        // Fetch text to reuse already instanciated letter size
+        let mut text = get_or_init_text().lock().unwrap();
+
+        let mut current_offset = 0;
+        // NOTE could be done in parallel
+        for c in chars {
+            let mut current_top_left = top_left;
+            current_top_left.x += current_offset;
+            let letter = text.get_letter(c, font_size);
+
+            self.draw_letter(letter, current_top_left, color);
+
+            current_offset += spacing + letter[0].len() as isize;
+        }
+
+        self.coalesce();
+
+        self
+    }
+
+    pub fn draw_letter(&mut self, letter: &Letter, top_left: IPosition, color: T) -> &mut Self {
+        let (letter_h, letter_w) = (letter.len(), letter[0].len());
+
+        // TODO factorize the following to use with other function
+        let (x_start, x_end) = (
+            max(0, top_left.x) as usize,
+            min(self.width as isize, top_left.x + letter_w as isize) as usize,
+        );
+
+        let (y_start, y_end) = (
+            max(0, top_left.y) as usize,
+            min(self.height as isize, top_left.y + letter_h as isize) as usize,
+        );
+
+        // get the offset for the letter if the beginning of the letter is off canvas
+        let (letter_x_offset, letter_y_offset) = (
+            (x_start as isize - top_left.x).abs() as usize,
+            (y_start as isize - top_left.y).abs() as usize,
+        );
+
+        for (i, y) in (y_start..y_end).enumerate() {
+            let y = y * self.width;
+            for (j, x) in (x_start..x_end).enumerate() {
+                let interval = y + x;
+                if letter[i + letter_y_offset][j + letter_x_offset] == 1 {
+                    self.add_interval(interval, interval, color);
+                }
+            }
         }
 
         self
@@ -130,6 +243,40 @@ where
 mod tests {
     use super::*;
 
+    #[test]
+    fn image_add_interval_start_is_end() {
+        // [(4, 'A')] ==> [(1, 'B'), (3, 'A')]
+        let mut img = Image::new(1, 4, 'A');
+        img.add_interval(0, 0, 'B');
+        assert_eq!(img.pixels_indexes, vec![RLE::new(1, 'B'), RLE::new(3, 'A')]);
+
+        // [(4, 'A')] ==> [(3, 'A'), (1, 'B')]
+        let mut img = Image::new(1, 4, 'A');
+        img.add_interval(3, 3, 'B');
+        assert_eq!(img.pixels_indexes, vec![RLE::new(3, 'A'), RLE::new(1, 'B')]);
+
+        // [(4, 'A')] ==> [(1, 'A'), (1, 'B'), (2, 'A')]
+        let mut img = Image::new(1, 4, 'A');
+        img.add_interval(1, 1, 'B');
+        assert_eq!(
+            img.pixels_indexes,
+            vec![RLE::new(1, 'A'), RLE::new(1, 'B'), RLE::new(2, 'A')]
+        );
+
+        // [(1, 'A'), (1, 'B'), (4, 'C')] ==> [(1, 'A'), (1, 'B'), (1, 'D'), (3, 'C')]
+        let mut img = Image::new(1, 6, 'A');
+        img.pixels_indexes = vec![RLE::new(1, 'A'), RLE::new(1, 'B'), RLE::new(4, 'C')];
+        img.add_interval(2, 2, 'D');
+        assert_eq!(
+            img.pixels_indexes,
+            vec![
+                RLE::new(1, 'A'),
+                RLE::new(1, 'B'),
+                RLE::new(1, 'D'),
+                RLE::new(3, 'C')
+            ]
+        );
+    }
     #[test]
     fn image_add_interval_within_same_index_test() {
         // [(4, 'A')] ==> [(2, 'B'), (2, 'A')]
@@ -229,5 +376,32 @@ mod tests {
         // img_expected.print_content();
 
         assert_eq!(expected, img.pixels_indexes);
+    }
+
+    #[test]
+    fn coalesce_test() {
+        // [(4, 'A')] ==> [(4, 'A')]
+        let mut img = Image::new(1, 4, 'A');
+        img.pixels_indexes = vec![RLE::new(4, 'A')];
+        img.coalesce();
+        assert_eq!(img.pixels_indexes, vec![RLE::new(4, 'A')]);
+
+        // [(2, 'A'), (2, 'A')] ==> [(4, 'A')]
+        let mut img = Image::new(1, 4, 'A');
+        img.pixels_indexes = vec![RLE::new(2, 'A'), RLE::new(2, 'A')];
+        img.coalesce();
+        assert_eq!(img.pixels_indexes, vec![RLE::new(4, 'A')]);
+
+        // [(2, 'A'), (2, 'A'), (2, 'A'),(2, 'B'), (2, 'B') ] ==> [(6, 'A'), (4, B)]
+        let mut img = Image::new(1, 4, 'A');
+        img.pixels_indexes = vec![
+            RLE::new(2, 'A'),
+            RLE::new(2, 'A'),
+            RLE::new(2, 'A'),
+            RLE::new(2, 'B'),
+            RLE::new(2, 'B'),
+        ];
+        img.coalesce();
+        assert_eq!(img.pixels_indexes, vec![RLE::new(6, 'A'), RLE::new(4, 'B')]);
     }
 }
