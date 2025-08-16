@@ -37,6 +37,7 @@ fn main() {
     // example2(&mut gif, height, width);
     // example3(&mut gif, height, width);
     // example_text();
+    example_animation_rotation();
 
     // DEBUG
     // gif.debug(None);
@@ -265,6 +266,34 @@ fn example_animator() {
     let frames = scene.render();
 
     let frames = vec![frames[0].clone(), frames[200].clone(), frames[359].clone()];
+
+    for frame in frames {
+        for row in frame.buffer {
+            for c in row {
+                match c {
+                    Color::RGBA(0, 0, 0, 0) => print!("."),
+                    _ => print!("X"),
+                }
+            }
+            println!("");
+        }
+        println!("\n");
+    }
+}
+
+fn example_animation_rotation() {
+    let mut rectangle = Rectangle::new(Point { x: 3.0, y: 3.0 }, Point { x: 13.0, y: 13.0 });
+    rectangle
+        .rotation(Rotation::Degree(20.))
+        .fill_color(Color::RGBA(255, 0, 0, 255))
+        .outline_color(Color::RGBA(255, 255, 255, 255));
+
+    let mut scene = Scene::new(20, 20, 360);
+    scene.add_object(rectangle);
+
+    let frames = scene.render();
+
+    let frames = vec![frames[0].clone()];
 
     for frame in frames {
         for row in frame.buffer {

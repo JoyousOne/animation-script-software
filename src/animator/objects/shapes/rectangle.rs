@@ -1,8 +1,16 @@
-use crate::animator::{
-    scene::{Draw, Frame},
-    transition::{Rotate, Scale, Transition, Transitionable, Translate},
-    types::{Color, CoordinateValue, Length, Point, Rotation},
+use crate::{
+    animator::{
+        scene::{Draw, Frame},
+        transition::{Rotate, Scale, Transition, Transitionable, Translate},
+        types::{Color, CoordinateValue, Length, Point, Rotation},
+    },
+    common::{
+        drawing::{Polygon, mid_point_line_drawing},
+        types::Limit,
+    },
 };
+
+const BLACK: Color = Color::RGB(0, 0, 0);
 
 #[derive(Clone)]
 pub struct Rectangle {
@@ -18,6 +26,57 @@ pub struct Rectangle {
 }
 
 impl Rectangle {
+    /// FLUENT CHAINED SYNTAX STARTS HERE
+    pub fn new(top_left: Point, bottom_right: Point) -> Self {
+        Rectangle {
+            p1: top_left,
+            p2: bottom_right,
+            rotation: Rotation::Turn(0.),
+            z_index: 0, // TODO check if needs to be automatically incremented when auto
+            fill_color: BLACK,
+            border_color: BLACK,
+            border_size: Length::Pixel(0),
+            outline_color: BLACK,
+            outline_size: Length::Pixel(0),
+        }
+    }
+
+    pub fn rotation(&mut self, rotation: Rotation) -> &mut Self {
+        self.rotation = rotation;
+        self
+    }
+
+    pub fn z_index(&mut self, z_index: i32) -> &mut Self {
+        self.z_index = z_index;
+        self
+    }
+
+    pub fn fill_color(&mut self, fill_color: Color) -> &mut Self {
+        self.fill_color = fill_color;
+        self
+    }
+
+    pub fn border_color(&mut self, border_color: Color) -> &mut Self {
+        self.border_color = border_color;
+        self
+    }
+
+    pub fn border_size(&mut self, border_size: Length) -> &mut Self {
+        self.border_size = border_size;
+        self
+    }
+
+    pub fn outline_color(&mut self, outline_color: Color) -> &mut Self {
+        self.outline_color = outline_color;
+        self
+    }
+
+    pub fn outline_size(&mut self, outline_size: Length) -> &mut Self {
+        self.outline_size = outline_size;
+        self
+    }
+    /// FLUENT CHAINED SYNTAX ENDS HERE
+
     pub fn center(&self) -> Point {
         Point {
             x: (self.p1.x + self.p2.x) / 2.0,
@@ -25,18 +84,31 @@ impl Rectangle {
         }
     }
 
+    fn original_corners(&self) -> [Point; 4] {
+        let (x1, x2) = (self.p1.x, self.p2.x);
+        let (y1, y2) = (self.p1.y, self.p2.y);
+        let corners: [Point; 4] = [
+            self.p1,
+            Point { x: x2, y: y1 },
+            Point { x: x1, y: y2 },
+            self.p2,
+        ];
+
+        corners
+    }
+
     pub fn corners(&self) -> Vec<Point> {
         let corners = [
             self.p1,
-            self.p2,
-            Point {
-                x: self.p1.x,
-                y: self.p2.y,
-            },
             Point {
                 x: self.p2.x,
                 y: self.p1.y,
             },
+            Point {
+                x: self.p1.x,
+                y: self.p2.y,
+            },
+            self.p2,
         ];
 
         let center = self.center();
@@ -94,15 +166,42 @@ impl Draw for Rectangle {
     }
 
     fn draw(&self, _frame_count: u32, frame: &mut Frame) {
-        // TODO apply rotation
-        let min_x = self.left().max(0.0) as usize;
-        let max_x = self.right().min(frame.xsize() as f64) as usize;
-        let min_y = self.top().max(0.0) as usize;
-        let max_y = self.bottom().min(frame.ysize() as f64) as usize;
+        let corners = self.corners();
+        let mut border = Vec::new();
 
-        for y in min_y..=max_y {
-            for x in min_x..=max_x {
-                frame.put_pixel(x, y, self.fill_color);
+        // Horizontal parallel line
+        border.extend_from_slice(&mid_point_line_drawing(corners[0], corners[1]));
+        border.extend_from_slice(&mid_point_line_drawing(corners[2], corners[3]));
+
+        // Vertical parallel line
+        border.extend_from_slice(&mid_point_line_drawing(corners[0], corners[2]));
+        border.extend_from_slice(&mid_point_line_drawing(corners[1], corners[3]));
+
+        let mut rect = Polygon::new();
+        for p in border {
+            rect.update(p);
+        }
+
+        // DEBUG
+        // for (y, Limit { min, max }) in &rect.lateral_line {
+        //     println!("y: {y}, {min}->{max}");
+        // }
+
+        let max_y = frame.ysize() as isize;
+        let max_x = frame.xsize() as isize;
+        for (y, Limit { min, max }) in rect.lateral_line {
+            // Skip line if out of bound
+            if y < 0 || y > max_y {
+                continue;
+            }
+
+            // Adjust the limit of x
+            let x_start = min.max(0);
+            let x_end = max.min(max_x);
+
+            // Add pixels
+            for x in x_start..=x_end {
+                frame.put_pixel(x as usize, y as usize, self.fill_color);
             }
         }
     }
