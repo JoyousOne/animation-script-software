@@ -31,7 +31,7 @@ impl Position {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IPosition {
     pub x: isize,
     pub y: isize,
@@ -40,5 +40,22 @@ pub struct IPosition {
 impl IPosition {
     pub fn new(x: isize, y: isize) -> Self {
         IPosition { x, y }
+    }
+}
+
+pub struct Limit {
+    pub min: isize,
+    pub max: isize,
+}
+
+impl Limit {
+    pub fn update(&mut self, new_value: isize) {
+        if self.min > new_value {
+            self.min = new_value;
+        }
+
+        if self.max < new_value {
+            self.max = new_value;
+        }
     }
 }
